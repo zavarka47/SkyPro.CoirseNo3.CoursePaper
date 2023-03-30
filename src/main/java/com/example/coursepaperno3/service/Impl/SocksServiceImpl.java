@@ -13,8 +13,6 @@ import java.util.*;
 @Service
 public class SocksServiceImpl implements SocksService {
 
-    //private final Map<Sock, Integer> socks = new TreeMap<>();
-    //private final List <Sock> socks = new ArrayList<>();
     private final Map <Sock, Integer> socks = new HashMap<>();
     private final Map<LocalDate, HashMap<Sock, Integer>> deleteHistory = new TreeMap<>();
 

@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 public class Sock {
     Color color;
     Size size;
-    CottonPart cottonPart;
+    int cottonPart;
 
-    public Sock(Color color, Size size, CottonPart cottonPart) {
+    public Sock(Color color, Size size, int cottonPart) {
         this.color = color;
         this.size = size;
         this.cottonPart = cottonPart;

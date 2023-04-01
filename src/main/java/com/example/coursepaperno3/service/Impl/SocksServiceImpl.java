@@ -1,7 +1,6 @@
 package com.example.coursepaperno3.service.Impl;
 
 import com.example.coursepaperno3.model.Color;
-import com.example.coursepaperno3.model.CottonPart;
 import com.example.coursepaperno3.model.Size;
 import com.example.coursepaperno3.model.Sock;
 import com.example.coursepaperno3.service.SocksService;
@@ -18,7 +17,7 @@ public class SocksServiceImpl implements SocksService {
 
     //Post
     @Override
-    public boolean addSocks(Color color, Size size, CottonPart cottonPart, int quantity) {
+    public boolean addSocks(Color color, Size size, int cottonPart, int quantity) {
         Sock sockNew = new Sock(color, size, cottonPart);
         if (quantity<0){return false;}
         if (socks.containsKey(sockNew)) {
@@ -32,7 +31,7 @@ public class SocksServiceImpl implements SocksService {
 
     //Put
     @Override
-    public boolean putSocks(Color color, Size size, CottonPart cottonPart, int quantity) {
+    public boolean putSocks(Color color, Size size, int cottonPart, int quantity) {
         Sock sockPut = new Sock(color, size, cottonPart);
         if (!socks.containsKey(sockPut) || (socks.get(sockPut) < quantity)) {
             return false;
@@ -44,17 +43,42 @@ public class SocksServiceImpl implements SocksService {
 
     //Get
     @Override
-    public Integer getSocks(Color color, Size size, CottonPart cottonPart) {
+    public Integer getSocksWithCottonMoreThan(Color color, Size size, int cottonPart) {
+        int count = 0;
         Sock sockGet = new Sock(color, size, cottonPart);
-        return socks.getOrDefault(sockGet, -1);
+        for (Map.Entry <Sock, Integer> foundSocks : socks.entrySet()){
+            if (foundSocks.getKey().getColor().equals(color) &&
+            foundSocks.getKey().getSize().equals(size) &&
+            foundSocks.getKey().getCottonPart()>= cottonPart){
+                count = count + foundSocks.getValue();
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public Integer getSocksWithCottonLowThan(Color color, Size size, int cottonPart) {
+        int count = 0;
+        Sock sockGet = new Sock(color, size, cottonPart);
+        for (Map.Entry <Sock, Integer> foundSocks : socks.entrySet()){
+            if (foundSocks.getKey().getColor().equals(color) &&
+                    foundSocks.getKey().getSize().equals(size) &&
+                    foundSocks.getKey().getCottonPart()<= cottonPart){
+                count = count + foundSocks.getValue();
+            }
+        }
+        return count;
     }
 
     //Delete
     @Override
-    public boolean deleteSocks(Color color, Size size, CottonPart cottonPart, int quantity) {
+    public int deleteSocks(Color color, Size size, int cottonPart, int quantity) {
         Sock sockDelete = new Sock(color, size, cottonPart);
-        if (!socks.containsKey(sockDelete) || (socks.get(sockDelete) < quantity)) {
-            return false;
+        if (!socks.containsKey(sockDelete)) {
+            return -1;
+        }
+        if (socks.get(sockDelete) < quantity) {
+            return 0;
         } else {
             socks.put(sockDelete, (socks.get(sockDelete) - quantity));
             if (deleteHistory.containsKey(LocalDate.now())) {
@@ -64,7 +88,7 @@ public class SocksServiceImpl implements SocksService {
                 socksDelete.put(sockDelete, quantity);
                 deleteHistory.put(LocalDate.now(), socksDelete);
             }
-            return true;
+            return 1;
         }
 
 

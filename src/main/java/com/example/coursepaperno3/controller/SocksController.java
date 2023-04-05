@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/socks")
 public class SocksController {
@@ -71,7 +73,7 @@ public class SocksController {
             @ApiResponse (responseCode = "500", description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
     @PostMapping("/add")
-    public ResponseEntity addSocks (Color color, Size size, int cottonPart, int quantity){
+    public ResponseEntity addSocks (Color color, Size size, int cottonPart, int quantity) throws IOException{
         boolean result = socksService.addSocks(color, size, cottonPart, quantity);
         if (result){
             return ResponseEntity.ok("Партия носков успешно добавлена на склад");
@@ -90,7 +92,7 @@ public class SocksController {
             @ApiResponse (responseCode = "500", description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
     @PutMapping("/edit")
-    public ResponseEntity putSocks (Color color, Size size, int cottonPart, int quantity){
+    public ResponseEntity putSocks (Color color, Size size, int cottonPart, int quantity) throws IOException{
         boolean result = socksService.putSocks(color, size, cottonPart, quantity);
         if (result){
             return ResponseEntity.ok("Партия носков успешно отгружена со склада");
@@ -109,17 +111,13 @@ public class SocksController {
             @ApiResponse (responseCode = "500", description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
     @DeleteMapping("/remove")
-    public ResponseEntity deleteSocks (Color color, Size size, int cottonPart, int quantity){
-        int result = socksService.deleteSocks(color, size, cottonPart, quantity);
-        if (result > 0){
+    public ResponseEntity deleteSocks (Color color, Size size, int cottonPart, int quantity) throws IOException {
+       boolean result = socksService.deleteSocks(color, size, cottonPart, quantity);
+        if (result){
             return ResponseEntity.ok("Партия носков успешно списана");
-        }
-        if (result == 0){
-            return new ResponseEntity("Вы пытаетесь списать товар, в количестве больше чем есть на складе",
-                     HttpStatus.BAD_REQUEST);
         } else {
-            return new ResponseEntity("Вы пытаетесь списать товар, которого нет на складе",
-                    HttpStatus.BAD_REQUEST);
+            return new ResponseEntity("Параметры запроса отсутствуют или имеют некорректный формат",
+                     HttpStatus.BAD_REQUEST);
         }
     }
 }

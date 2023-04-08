@@ -36,34 +36,29 @@ public class SocksServiceImpl implements SocksService {
             readFromSocksFile();
         }
     }
-
-        @PostConstruct
-        private void readOperationsFile() throws IOException {
+    @PostConstruct
+    private void readOperationsFile() throws IOException {
         File file = fileService.getOperationsFile();
         if (file.exists() && file.length() != 0) {
             readFromOperationsFile();
         }
     }
+
     //Post
     @Override
     public boolean addSocks(Color color, Size size, int cottonPart, int quantity) throws IOException {
         Sock sockNew = new Sock(color, size, cottonPart);
         if (quantity < 0) {
-            return false;
-        }
+            return false;}
         if (socks.containsKey(sockNew)) {
             socks.put(sockNew, (socks.get(sockNew) + quantity));
-            History newRecord = new History(Operation.ADD, LocalDate.now().toString(), sockNew, quantity);
-            operationsHistory.add(newRecord);
-            saveToFiles();
-            return true;
         } else {
             socks.put(sockNew, quantity);
-            History newRecord = new History(Operation.ADD, LocalDate.now().toString(), sockNew, quantity);
-            operationsHistory.add(newRecord);
-            saveToFiles();
-            return true;
         }
+        History newRecord = new History(Operation.ADD, LocalDate.now().toString(), sockNew, quantity);
+        operationsHistory.add(newRecord);
+        saveToFiles();
+        return true;
     }
 
     //Put
@@ -161,8 +156,8 @@ public class SocksServiceImpl implements SocksService {
     @AllArgsConstructor
     @NoArgsConstructor
     private class SocksSupport {
-        int quantity;
-        Sock sock;
+        private int quantity;
+        private Sock sock;
     }
 
 }

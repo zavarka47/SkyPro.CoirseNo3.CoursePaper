@@ -10,8 +10,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class History {
-    Operation operation;
-    String localDate;
-    Sock sock;
-    int quantity;
+    private Operation operation;
+    private String localDate;
+    private Sock sock;
+    private int quantity;
 }

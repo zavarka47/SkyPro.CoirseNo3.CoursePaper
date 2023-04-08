@@ -72,7 +72,7 @@ public class SocksController {
             @ApiResponse (responseCode = "400", description = "Параметры запроса отсутствуют или имеют некорректный формат"),
             @ApiResponse (responseCode = "500", description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
-    @PostMapping("/add")
+    @PostMapping()
     public ResponseEntity addSocks (Color color, Size size, int cottonPart, int quantity) throws IOException{
         boolean result = socksService.addSocks(color, size, cottonPart, quantity);
         if (result){
@@ -91,7 +91,7 @@ public class SocksController {
             @ApiResponse (responseCode = "400", description = "Товара нет на складе в нужном количестве или параметры запроса имеют некорректный формат"),
             @ApiResponse (responseCode = "500", description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
-    @PutMapping("/edit")
+    @PutMapping()
     public ResponseEntity putSocks (Color color, Size size, int cottonPart, int quantity) throws IOException{
         boolean result = socksService.putSocks(color, size, cottonPart, quantity);
         if (result){
@@ -110,7 +110,7 @@ public class SocksController {
             @ApiResponse (responseCode = "400", description = "Параметры запроса отсутствуют или имеют некорректный формат"),
             @ApiResponse (responseCode = "500", description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
-    @DeleteMapping("/remove")
+    @DeleteMapping()
     public ResponseEntity deleteSocks (Color color, Size size, int cottonPart, int quantity) throws IOException {
        boolean result = socksService.deleteSocks(color, size, cottonPart, quantity);
         if (result){

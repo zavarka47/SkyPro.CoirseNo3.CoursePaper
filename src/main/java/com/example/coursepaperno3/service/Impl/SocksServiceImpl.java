@@ -1,60 +1,164 @@
 package com.example.coursepaperno3.service.Impl;
 
-import com.example.coursepaperno3.model.Color;
-import com.example.coursepaperno3.model.CottonPart;
-import com.example.coursepaperno3.model.Size;
-import com.example.coursepaperno3.model.Sock;
+import com.example.coursepaperno3.model.*;
+import com.example.coursepaperno3.service.FileService;
 import com.example.coursepaperno3.service.SocksService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
+import com.google.gson.Gson;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
+@Service
 public class SocksServiceImpl implements SocksService {
 
-    private final Map <Sock, Integer> socks = new TreeMap<>();
-    private final Map <LocalDate, HashMap<Sock, Integer>> deleteHistory = new TreeMap<>();
+    private HashMap<Sock, Integer> socks = new HashMap<>();
+    private ArrayList <History> operationsHistory =  new ArrayList<>();
+    private final FileService fileService;
+    public SocksServiceImpl(FileService fileService) {
+        this.fileService = fileService;
+    }
 
-
+    @PostConstruct
+    private void readSocksFile() throws IOException {
+        File file = fileService.getSocksFile();
+        if (file.exists() && file.length() != 0) {
+            readFromSocksFile();
+        }
+    }
+    @PostConstruct
+    private void readOperationsFile() throws IOException {
+        File file = fileService.getOperationsFile();
+        if (file.exists() && file.length() != 0) {
+            readFromOperationsFile();
+        }
+    }
 
     //Post
-    public void addSocks (Color color, Size size, CottonPart cottonPart, int quantity){
+    @Override
+    public boolean addSocks(Color color, Size size, int cottonPart, int quantity) throws IOException {
         Sock sockNew = new Sock(color, size, cottonPart);
-        if (socks.containsKey(sockNew)){
+        if (quantity < 0) {
+            return false;}
+        if (socks.containsKey(sockNew)) {
             socks.put(sockNew, (socks.get(sockNew) + quantity));
         } else {
             socks.put(sockNew, quantity);
         }
+        History newRecord = new History(Operation.ADD, LocalDate.now().toString(), sockNew, quantity);
+        operationsHistory.add(newRecord);
+        saveToFiles();
+        return true;
     }
 
     //Put
-    public boolean putSocks (Color color, Size size, CottonPart cottonPart, int quantity) {
+    @Override
+    public boolean putSocks(Color color, Size size, int cottonPart, int quantity) throws IOException {
         Sock sockPut = new Sock(color, size, cottonPart);
         if (!socks.containsKey(sockPut) || (socks.get(sockPut) < quantity)) {
             return false;
         } else {
             socks.put(sockPut, (socks.get(sockPut) - quantity));
+            History newRecord = new History(Operation.EDIT, LocalDate.now().toString(), sockPut, quantity);
+            operationsHistory.add(newRecord);
+            saveToFiles();
             return true;
         }
     }
 
     //Get
-    public Integer getSocks (Color color, Size size, CottonPart cottonPart){
-        Sock sockGet = new Sock(color, size, cottonPart);
-        return socks.getOrDefault(sockGet, -1);
+    @Override
+    public Integer getSocksWithCottonMoreThan(Color color, Size size, int cottonPart) {
+        int count = 0;
+        for (Map.Entry<Sock, Integer> foundSocks : socks.entrySet()) {
+            if (foundSocks.getKey().getColor().equals(color) &&
+                    foundSocks.getKey().getSize().equals(size) &&
+                    foundSocks.getKey().getCottonPart() >= cottonPart) {
+                count = count + foundSocks.getValue();
+            }
+        }
+        return count;
     }
+
+    @Override
+    public Integer getSocksWithCottonLowThan(Color color, Size size, int cottonPart) {
+        int count = 0;
+        for (Map.Entry<Sock, Integer> foundSocks : socks.entrySet()) {
+            if (foundSocks.getKey().getColor().equals(color) &&
+                    foundSocks.getKey().getSize().equals(size) &&
+                    foundSocks.getKey().getCottonPart() <= cottonPart) {
+                count = count + foundSocks.getValue();
+            }
+        }
+        return count;
+    }
+
     //Delete
-    public boolean deleteSocks (Color color, Size size, CottonPart cottonPart, int quantity){
+    @Override
+    public boolean deleteSocks(Color color, Size size, int cottonPart, int quantity) throws IOException {
         Sock sockDelete = new Sock(color, size, cottonPart);
-        if (!socks.containsKey(sockDelete) || (socks.get(sockDelete) < quantity)) {
+        if (!socks.containsKey(sockDelete) || socks.get(sockDelete) < quantity) {
             return false;
         } else {
             socks.put(sockDelete, (socks.get(sockDelete) - quantity));
-            HashMap <Sock, Integer> test = new HashMap<>();
-            test.put(sockDelete, quantity);
-            deleteHistory.put(LocalDate.now(), test);
+            History newRecord = new History(Operation.EDIT, LocalDate.now().toString(), sockDelete, quantity);
+            operationsHistory.add(newRecord);
+            saveToFiles();
             return true;
         }
     }
+
+    //Work With File
+
+    private void saveToFiles() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        String operationsJson = mapper.writeValueAsString(operationsHistory);
+        fileService.saveOperationsFile(operationsJson);
+
+        ArrayList<SocksSupport> socksSupports = new ArrayList<>();
+        for (Map.Entry<Sock,Integer> s:socks.entrySet()) {
+            socksSupports.add(new SocksSupport(s.getValue(), s.getKey()));}
+
+        String socksJson = mapper.writeValueAsString(socksSupports);
+        fileService.saveSocksFile(socksJson);
+
+    }
+
+    private void readFromSocksFile() throws IOException {
+        String json = fileService.readSocksFile();
+        ArrayList<SocksSupport> socksSupports = new Gson().fromJson(json, ArrayList.class);
+
+        for (SocksSupport s:socksSupports) {
+            socks.put(s.getSock(), s.getQuantity());
+        }
+
+
+    }
+
+    private void readFromOperationsFile() throws IOException {
+        String json = fileService.readOperationsFile();
+        operationsHistory = new ObjectMapper().readValue(json, new TypeReference<ArrayList<History>>() {
+        });
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    private class SocksSupport {
+        private int quantity;
+        private Sock sock;
+    }
+
 }
+

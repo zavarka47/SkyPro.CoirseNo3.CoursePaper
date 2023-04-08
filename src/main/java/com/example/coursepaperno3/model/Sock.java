@@ -1,18 +1,15 @@
 package com.example.coursepaperno3.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class Sock {
     Color color;
     Size size;
-    CottonPart cottonPart;
+    int cottonPart;
 
-    public Sock(Color color, Size size, CottonPart cottonPart) {
-        this.color = color;
-        this.size = size;
-        this.cottonPart = cottonPart;
-    }
 }
